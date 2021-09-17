@@ -53,7 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _scrollToTop() {
     _scrollController.animateTo(0,
-        duration: Duration(milliseconds: 750), curve: Curves.linear);
+        duration: Duration(milliseconds: 550), curve: Curves.linear);
   }
 
   @override
