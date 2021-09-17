@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:location/location.dart';
 
 void main() {
   runApp(MyApp());
@@ -30,9 +31,16 @@ class _MyHomePageState extends State<MyHomePage> {
   late ScrollController _scrollController;
   bool _showBackToTopButton = false;
 
+  Location location = Location();
+  late PermissionStatus _permissionGranted;
+  late bool _serviceEnabled;
+  late LocationData _locationData;
+
   @override
   void initState() {
     super.initState();
+    getCurrentLocation();
+
     _scrollController = ScrollController()
       ..addListener(() {
         setState(() {
@@ -54,6 +62,24 @@ class _MyHomePageState extends State<MyHomePage> {
   void _scrollToTop() {
     _scrollController.animateTo(0,
         duration: Duration(milliseconds: 550), curve: Curves.linear);
+  }
+
+  // This returns the current Latitude and Longtitude
+  Future<LocationData?> getCurrentLocation() async {
+    _serviceEnabled = await location.serviceEnabled();
+    while (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+    }
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted != PermissionStatus.granted) {
+      _permissionGranted = await location.requestPermission();
+      while (_permissionGranted != PermissionStatus.granted) {
+        _permissionGranted = await location.requestPermission();
+      }
+    }
+    _locationData = await location.getLocation();
+    print(_locationData);
+    return _locationData;
   }
 
   @override
