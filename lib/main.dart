@@ -1,6 +1,7 @@
 import 'package:aristotle/generalFunctions/random_id_generator.dart';
 import 'package:aristotle/models/address.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
@@ -45,7 +46,9 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    getCurrentLocation();
+    if (!kIsWeb) {
+      getCurrentLocation();
+    }
 
     _scrollController = ScrollController()
       ..addListener(() {
