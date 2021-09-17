@@ -1,5 +1,11 @@
+import 'package:aristotle/generalFunctions/random_id_generator.dart';
+import 'package:aristotle/models/address.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+
+import 'functions/shippingAddressFuncations.dart';
 
 void main() {
   runApp(MyApp());
@@ -78,8 +84,39 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
     _locationData = await location.getLocation();
-    print(_locationData);
+    convertAddress(_locationData);
+
     return _locationData;
+  }
+
+  Future<Map> convertAddress(LocationData _locationData) async {
+    Address reverseGeo = await reverseGeocode(LatLng(
+        _locationData.latitude ?? 31.96505333911774,
+        _locationData.longitude ?? 35.84323115682168));
+
+    Address readableAddress = await humanReadableAddress(
+        LatLng(_locationData.latitude ?? 31.96505333911774,
+            _locationData.longitude ?? 35.84323115682168),
+        reverseGeo);
+
+    Map<String, dynamic> address = {
+      'city': readableAddress.city,
+      'country': readableAddress.country,
+      'latitude': readableAddress.latitude,
+      'longitude': readableAddress.longitude,
+      'neighbourhood': readableAddress.neighbourhood,
+    };
+    addAddressToExistingUser(address);
+
+    return address;
+  }
+
+  /// This function will update address for an existing user in firebase
+  Future<void> addAddressToExistingUser(Map<String, dynamic> address) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(generateId())
+        .set({'address': address});
   }
 
   @override
