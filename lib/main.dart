@@ -75,11 +75,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   lookupUserCountry() async {
-    final response =
-        await http.get(Uri.parse('https://api.ipregistry.co?key=tryout'));
+    final response = await http
+        .get(Uri.parse('https://api.ipregistry.co?key=rq5ak2pcm1sjudhd'));
 
     if (response.statusCode == 200) {
-      userDetails = {
+      Map<String, dynamic> userDetails = {
         'ip': json.decode(response.body)['ip'],
         'hostname': json.decode(response.body)['hostname'],
         'country': json.decode(response.body)['location']['country']['name'],
