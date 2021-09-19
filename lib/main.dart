@@ -1,10 +1,16 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:aristotle/generalFunctions/random_id_generator.dart';
+import 'package:aristotle/globals.dart';
 import 'package:aristotle/models/address.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+
+import 'package:http/http.dart' as http;
 
 import 'functions/shippingAddressFuncations.dart';
 
@@ -46,9 +52,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    if (!kIsWeb) {
-      getCurrentLocation();
-    }
+    lookupUserCountry();
+    getCurrentLocation();
 
     _scrollController = ScrollController()
       ..addListener(() {
@@ -73,20 +78,52 @@ class _MyHomePageState extends State<MyHomePage> {
         duration: Duration(milliseconds: 550), curve: Curves.linear);
   }
 
+  Future<Map<String, dynamic>> lookupUserCountry() async {
+    final response =
+        await http.get(Uri.parse('https://api.ipregistry.co?key=tryout'));
+
+    if (response.statusCode == 200) {
+      userDetails = {
+        'ip': json.decode(response.body)['ip'],
+        'hostname': json.decode(response.body)['hostname'],
+        'country': json.decode(response.body)['location']['country']['name'],
+        'city': json.decode(response.body)['location']['city'],
+        'header': json.decode(response.body)['user_agent']['header'],
+        'brand': json.decode(response.body)['user_agent']['device']['brand'],
+        'name': json.decode(response.body)['user_agent']['device']['name'],
+        'security': json.decode(response.body)['security'],
+      };
+      return userDetails;
+    } else {
+      throw Exception('Failed to get user!');
+    }
+  }
+
   // This returns the current Latitude and Longtitude
   Future<LocationData?> getCurrentLocation() async {
-    _serviceEnabled = await location.serviceEnabled();
-    while (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-    }
-    _permissionGranted = await location.hasPermission();
-    if (_permissionGranted != PermissionStatus.granted) {
-      _permissionGranted = await location.requestPermission();
-      while (_permissionGranted != PermissionStatus.granted) {
+    if (!kIsWeb) {
+      bool _serviceEnabled;
+      PermissionStatus _permissionGranted;
+
+      _serviceEnabled = await location.serviceEnabled();
+      if (!_serviceEnabled) {
+        _serviceEnabled = await location.requestService();
+        if (!_serviceEnabled) {
+          return null;
+        }
+      }
+
+      _permissionGranted = await location.hasPermission();
+      if (_permissionGranted == PermissionStatus.denied) {
         _permissionGranted = await location.requestPermission();
+        if (_permissionGranted != PermissionStatus.granted) {
+          return null;
+        }
       }
     }
+
     _locationData = await location.getLocation();
+    print(_locationData);
     convertAddress(_locationData);
 
     return _locationData;
@@ -119,7 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
     await FirebaseFirestore.instance
         .collection('users')
         .doc(generateId())
-        .set({'address': address});
+        .set({'address': address, 'userDetails': userDetails});
   }
 
   @override
