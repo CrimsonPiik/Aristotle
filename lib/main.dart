@@ -170,34 +170,31 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     TransformationController controllerT = TransformationController();
-    var initialControllerValue;
     return Scaffold(
       body: SingleChildScrollView(
         controller: _scrollController,
         child: Center(
           child: InteractiveViewer(
             transformationController: controllerT,
-            onInteractionStart: (details) {
-              initialControllerValue = controllerT.value;
-            },
+           
             minScale: 1.0,
             maxScale: 2.0,
-            // constrained: true,
-            // panEnabled: false,
-            child: Container(
-              child: Column(
-                children: [
-                  Image.asset("assets/1.jpg"),
-                  Image.asset("assets/2.jpg"),
-                  Image.asset("assets/3.jpg"),
-                  Image.asset("assets/4.jpg"),
-                  Image.asset("assets/5.jpg"),
-                  Image.asset("assets/6.jpg"),
-                  Image.asset("assets/7.jpg"),
-                  Image.asset("assets/8.jpg"),
-                ],
-              ),
-            ),
+            child: GestureDetector(
+                child: Column(
+                  children: [
+                    Image.asset("assets/1.jpg"),
+                    Image.asset("assets/2.jpg"),
+                    Image.asset("assets/3.jpg"),
+                    Image.asset("assets/4.jpg"),
+                    Image.asset("assets/5.jpg"),
+                    Image.asset("assets/6.jpg"),
+                    Image.asset("assets/7.jpg"),
+                    Image.asset("assets/8.jpg"),
+                  ],
+                ),
+                onDoubleTap: () {
+                  controllerT.value = Matrix4.identity();
+                }),
           ),
         ),
       ),
@@ -206,7 +203,7 @@ class _MyHomePageState extends State<MyHomePage> {
           : FloatingActionButton(
               backgroundColor: Colors.white,
               onPressed: () {
-                controllerT.value = initialControllerValue;
+                controllerT.value = Matrix4.identity();
                 _scrollToTop();
               },
               child: Icon(
