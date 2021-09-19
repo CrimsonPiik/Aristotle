@@ -45,16 +45,12 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _showBackToTopButton = false;
 
   Location location = Location();
-  late PermissionStatus _permissionGranted;
-  late bool _serviceEnabled;
   late LocationData _locationData;
 
   @override
   void initState() {
     super.initState();
     lookupUserCountry();
-    getCurrentLocation();
-
     _scrollController = ScrollController()
       ..addListener(() {
         setState(() {
@@ -78,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
         duration: Duration(milliseconds: 550), curve: Curves.linear);
   }
 
-  Future<Map<String, dynamic>> lookupUserCountry() async {
+  lookupUserCountry() async {
     final response =
         await http.get(Uri.parse('https://api.ipregistry.co?key=tryout'));
 
@@ -93,6 +89,9 @@ class _MyHomePageState extends State<MyHomePage> {
         'name': json.decode(response.body)['user_agent']['device']['name'],
         'security': json.decode(response.body)['security'],
       };
+      addUsersDetails(userDetails);
+      getCurrentLocation();
+
       return userDetails;
     } else {
       throw Exception('Failed to get user!');
@@ -156,7 +155,15 @@ class _MyHomePageState extends State<MyHomePage> {
     await FirebaseFirestore.instance
         .collection('users')
         .doc(generateId())
-        .set({'address': address, 'userDetails': userDetails});
+        .set({'address': address});
+  }
+
+  /// This function will update address for an existing user in firebase
+  Future<void> addUsersDetails(Map<String, dynamic> details) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(generateId() + "Details")
+        .set({'userDetails': details});
   }
 
   @override
