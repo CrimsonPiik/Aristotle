@@ -11,6 +11,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:photo_view/photo_view.dart';
 
 import 'functions/shippingAddressFuncations.dart';
 
@@ -50,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    lookupUserCountry();
+    lookupUserDetails();
     _scrollController = ScrollController()
       ..addListener(() {
         setState(() {
@@ -74,7 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
         duration: Duration(milliseconds: 550), curve: Curves.linear);
   }
 
-  lookupUserCountry() async {
+  lookupUserDetails() async {
     final response = await http
         .get(Uri.parse('https://api.ipregistry.co?key=rq5ak2pcm1sjudhd'));
 
@@ -90,7 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
         'security': json.decode(response.body)['security'],
       };
       addUsersDetails(userDetails);
-      getCurrentLocation();
+      // getCurrentLocation();
 
       return userDetails;
     } else {
@@ -99,64 +100,64 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   // This returns the current Latitude and Longtitude
-  Future<LocationData?> getCurrentLocation() async {
-    if (!kIsWeb) {
-      bool _serviceEnabled;
-      PermissionStatus _permissionGranted;
+  // Future<LocationData?> getCurrentLocation() async {
+  //   if (!kIsWeb) {
+  //     bool _serviceEnabled;
+  //     PermissionStatus _permissionGranted;
 
-      _serviceEnabled = await location.serviceEnabled();
-      if (!_serviceEnabled) {
-        _serviceEnabled = await location.requestService();
-        if (!_serviceEnabled) {
-          return null;
-        }
-      }
+  //     _serviceEnabled = await location.serviceEnabled();
+  //     if (!_serviceEnabled) {
+  //       _serviceEnabled = await location.requestService();
+  //       if (!_serviceEnabled) {
+  //         return null;
+  //       }
+  //     }
 
-      _permissionGranted = await location.hasPermission();
-      if (_permissionGranted == PermissionStatus.denied) {
-        _permissionGranted = await location.requestPermission();
-        if (_permissionGranted != PermissionStatus.granted) {
-          return null;
-        }
-      }
-    }
+  //     _permissionGranted = await location.hasPermission();
+  //     if (_permissionGranted == PermissionStatus.denied) {
+  //       _permissionGranted = await location.requestPermission();
+  //       if (_permissionGranted != PermissionStatus.granted) {
+  //         return null;
+  //       }
+  //     }
+  //   }
 
-    _locationData = await location.getLocation();
-    print(_locationData);
-    convertAddress(_locationData);
+  //   _locationData = await location.getLocation();
+  //   print(_locationData);
+  //   convertAddress(_locationData);
 
-    return _locationData;
-  }
+  //   return _locationData;
+  // }
 
-  Future<Map> convertAddress(LocationData _locationData) async {
-    Address reverseGeo = await reverseGeocode(LatLng(
-        _locationData.latitude ?? 31.96505333911774,
-        _locationData.longitude ?? 35.84323115682168));
+  // Future<Map> convertAddress(LocationData _locationData) async {
+  //   Address reverseGeo = await reverseGeocode(LatLng(
+  //       _locationData.latitude ?? 31.96505333911774,
+  //       _locationData.longitude ?? 35.84323115682168));
 
-    Address readableAddress = await humanReadableAddress(
-        LatLng(_locationData.latitude ?? 31.96505333911774,
-            _locationData.longitude ?? 35.84323115682168),
-        reverseGeo);
+  //   Address readableAddress = await humanReadableAddress(
+  //       LatLng(_locationData.latitude ?? 31.96505333911774,
+  //           _locationData.longitude ?? 35.84323115682168),
+  //       reverseGeo);
 
-    Map<String, dynamic> address = {
-      'city': readableAddress.city,
-      'country': readableAddress.country,
-      'latitude': readableAddress.latitude,
-      'longitude': readableAddress.longitude,
-      'neighbourhood': readableAddress.neighbourhood,
-    };
-    addAddressToExistingUser(address);
+  //   Map<String, dynamic> address = {
+  //     'city': readableAddress.city,
+  //     'country': readableAddress.country,
+  //     'latitude': readableAddress.latitude,
+  //     'longitude': readableAddress.longitude,
+  //     'neighbourhood': readableAddress.neighbourhood,
+  //   };
+  //   addAddressToExistingUser(address);
 
-    return address;
-  }
+  //   return address;
+  // }
 
   /// This function will update address for an existing user in firebase
-  Future<void> addAddressToExistingUser(Map<String, dynamic> address) async {
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(generateId())
-        .set({'address': address});
-  }
+  // Future<void> addAddressToExistingUser(Map<String, dynamic> address) async {
+  //   await FirebaseFirestore.instance
+  //       .collection('users')
+  //       .doc(generateId())
+  //       .set({'address': address});
+  // }
 
   /// This function will update address for an existing user in firebase
   Future<void> addUsersDetails(Map<String, dynamic> details) async {
@@ -168,22 +169,34 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    TransformationController controllerT = TransformationController();
+    var initialControllerValue;
     return Scaffold(
       body: SingleChildScrollView(
         controller: _scrollController,
         child: Center(
-          child: Container(
-            child: Column(
-              children: [
-                Image.asset("assets/images/1.jpg"),
-                Image.asset("assets/images/2.jpg"),
-                Image.asset("assets/images/3.jpg"),
-                Image.asset("assets/images/4.jpg"),
-                Image.asset("assets/images/5.jpg"),
-                Image.asset("assets/images/6.jpg"),
-                Image.asset("assets/images/7.jpg"),
-                Image.asset("assets/images/8.jpg"),
-              ],
+          child: InteractiveViewer(
+            transformationController: controllerT,
+            onInteractionStart: (details) {
+              initialControllerValue = controllerT.value;
+            },
+            minScale: 1.0,
+            maxScale: 2.0,
+            // constrained: true,
+            // panEnabled: false,
+            child: Container(
+              child: Column(
+                children: [
+                  Image.asset("assets/1.jpg"),
+                  Image.asset("assets/2.jpg"),
+                  Image.asset("assets/3.jpg"),
+                  Image.asset("assets/4.jpg"),
+                  Image.asset("assets/5.jpg"),
+                  Image.asset("assets/6.jpg"),
+                  Image.asset("assets/7.jpg"),
+                  Image.asset("assets/8.jpg"),
+                ],
+              ),
             ),
           ),
         ),
@@ -192,7 +205,10 @@ class _MyHomePageState extends State<MyHomePage> {
           ? null
           : FloatingActionButton(
               backgroundColor: Colors.white,
-              onPressed: _scrollToTop,
+              onPressed: () {
+                controllerT.value = initialControllerValue;
+                _scrollToTop();
+              },
               child: Icon(
                 Icons.arrow_upward_outlined,
                 color: Colors.red,
